@@ -15,9 +15,6 @@
             </a>
           </div>
           <div class="top-bar-actions">
-            <button class="theme-toggle" @click="toggleTheme" :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
-              {{ isDarkMode ? '☀️' : '🌙' }}
-            </button>
             <div class="language-selector">
               <select v-model="currentLanguage" @change="changeLanguage">
                 <option value="en">🇬🇧 EN</option>
@@ -36,34 +33,34 @@
         <div class="header-content">
           <!-- Logo -->
           <router-link to="/" class="logo">
-            <span class="logo-icon">✈️</span>
+            <img src="/images/logo.jpeg" alt="So Where To?" class="logo-img">
             <span class="logo-text">So <span class="highlight">Where To</span>?</span>
           </router-link>
 
           <!-- Desktop Navigation -->
           <nav class="desktop-nav">
-            <router-link to="/" class="nav-link" :class="{ active: isActive('/') }">
-              <span class="nav-icon">🏠</span>
+            <router-link to="/" class="nav-link hov-un-ani" :class="{ active: isActive('/') }">
+              <!-- <span class="nav-icon">🏠</span> -->
               <span>Home</span>
             </router-link>
             
-            <router-link to="/how-it-works" class="nav-link" :class="{ active: isActive('/how-it-works') }">
-              <span class="nav-icon">❓</span>
+            <router-link to="/how-it-works" class="nav-link hov-un-ani" :class="{ active: isActive('/how-it-works') }">
+              <!-- <span class="nav-icon">❓</span> -->
               <span>How It Works</span>
             </router-link>
             
-            <router-link to="/spin" class="nav-link" :class="{ active: isActive('/spin') }">
-              <span class="nav-icon">🎲</span>
+            <router-link to="/spin" class="nav-link hov-un-ani" :class="{ active: isActive('/spin') }">
+              <!-- <span class="nav-icon">🎲</span> -->
               <span>Spin the Globe</span>
             </router-link>
             
-            <router-link to="/destinations" class="nav-link" :class="{ active: isActive('/destinations') }">
-              <span class="nav-icon">🌍</span>
+            <router-link to="/destinations" class="nav-link hov-un-ani" :class="{ active: isActive('/destinations') }">
+              <!-- <span class="nav-icon">🌍</span> -->
               <span>Destinations</span>
             </router-link>
             
-            <router-link to="/contact" class="nav-link" :class="{ active: isActive('/contact') }">
-              <span class="nav-icon">📞</span>
+            <router-link to="/contact" class="nav-link hov-un-ani" :class="{ active: isActive('/contact') }">
+              <!-- <span class="nav-icon">📞</span> -->
               <span>Contact</span>
             </router-link>
           </nav>
@@ -73,7 +70,9 @@
             <!-- Cart -->
             <router-link to="/cart" class="cart-icon" :class="{ 'has-items': cartCount > 0 }">
               <span class="cart-count" v-if="cartCount > 0">{{ cartCount }}</span>
-              <span class="icon">🛒</span>
+              <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16">
+  <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/>
+</svg></span>
             </router-link>
 
             <!-- User Menu (Authenticated) -->
@@ -86,20 +85,20 @@
               
               <div class="user-dropdown" v-show="userMenuOpen" @click.outside="userMenuOpen = false">
                 <router-link to="/profile" class="dropdown-item" @click="userMenuOpen = false">
-                  <span class="item-icon">👤</span>
+                  <!-- <span class="item-icon">👤</span> -->
                   <span>My Profile</span>
                 </router-link>
                 <router-link to="/bookings" class="dropdown-item" @click="userMenuOpen = false">
-                  <span class="item-icon">📅</span>
+                  <!-- <span class="item-icon">📅</span> -->
                   <span>My Bookings</span>
                 </router-link>
                 <router-link to="/wishlist" class="dropdown-item" @click="userMenuOpen = false">
-                  <span class="item-icon">❤️</span>
+                  <!-- <span class="item-icon">❤️</span> -->
                   <span>Wishlist</span>
                 </router-link>
                 <div class="dropdown-divider"></div>
                 <button class="dropdown-item" @click="logout">
-                  <span class="item-icon">🚪</span>
+                  <!-- <span class="item-icon">🚪</span> -->
                   <span>Logout</span>
                 </button>
               </div>
@@ -128,28 +127,28 @@
     <transition name="slide-down">
       <div class="mobile-nav" v-show="mobileMenuOpen">
         <nav class="mobile-nav-links">
-          <router-link to="/" class="mobile-nav-link" @click="mobileMenuOpen = false">
-            <span class="nav-icon">🏠</span>
+          <router-link to="/" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+            <!-- <span class="nav-icon">🏠</span> -->
             <span>Home</span>
           </router-link>
           
-          <router-link to="/how-it-works" class="mobile-nav-link" @click="mobileMenuOpen = false">
-            <span class="nav-icon">❓</span>
+          <router-link to="/how-it-works" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+            <!-- <span class="nav-icon">❓</span> -->
             <span>How It Works</span>
           </router-link>
           
-          <router-link to="/spin" class="mobile-nav-link" @click="mobileMenuOpen = false">
-            <span class="nav-icon">🎲</span>
+          <router-link to="/spin" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+            <!-- <span class="nav-icon">🎲</span> -->
             <span>Spin the Globe</span>
           </router-link>
           
-          <router-link to="/destinations" class="mobile-nav-link" @click="mobileMenuOpen = false">
-            <span class="nav-icon">🌍</span>
+          <router-link to="/destinations" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+            <!-- <span class="nav-icon">🌍</span> -->
             <span>Destinations</span>
           </router-link>
           
-          <router-link to="/contact" class="mobile-nav-link" @click="mobileMenuOpen = false">
-            <span class="nav-icon">📞</span>
+          <router-link to="/contact" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+            <!-- <span class="nav-icon">📞</span> -->
             <span>Contact</span>
           </router-link>
 
@@ -157,26 +156,26 @@
 
           <template v-if="!isAuthenticated">
             <router-link to="/login" class="mobile-nav-link" @click="mobileMenuOpen = false">
-              <span class="nav-icon">🔐</span>
+              <!-- <span class="nav-icon">🔐</span> -->
               <span>Login</span>
             </router-link>
             <router-link to="/register" class="mobile-nav-link" @click="mobileMenuOpen = false">
-              <span class="nav-icon">📝</span>
+              <!-- <span class="nav-icon">📝</span> -->
               <span>Register</span>
             </router-link>
           </template>
 
           <template v-else>
             <router-link to="/profile" class="mobile-nav-link" @click="mobileMenuOpen = false">
-              <span class="nav-icon">👤</span>
+              <!-- <span class="nav-icon">👤</span> -->
               <span>My Profile</span>
             </router-link>
-            <router-link to="/bookings" class="mobile-nav-link" @click="mobileMenuOpen = false">
-              <span class="nav-icon">📅</span>
+            <router-link to="/bookings" class="mobile-nav-link hov-un-ani" @click="mobileMenuOpen = false">
+              <!-- <span class="nav-icon">📅</span> -->
               <span>My Bookings</span>
             </router-link>
-            <button class="mobile-nav-link logout" @click="logout">
-              <span class="nav-icon">🚪</span>
+            <button class="mobile-nav-link logout hov-un-ani" @click="logout">
+              <!-- <span class="nav-icon">🚪</span> -->
               <span>Logout</span>
             </button>
           </template>
@@ -438,6 +437,7 @@ export default {
 }
 
 /* Logo */
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -447,14 +447,21 @@ export default {
   font-weight: 700;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  animation: float 3s ease-in-out infinite;
+.logo-img {
+  height: 40px;  /* Adjust based on your logo size */
+  width: auto;
+  object-fit: contain;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+/* Dark mode adjustment for logo */
+.dark-mode .logo-img {
+  filter: brightness(1.2);  /* Makes logo slightly brighter in dark mode */
+}
+
+/* Optional: Add hover effect */
+.logo:hover .logo-img {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
 }
 
 .logo-text {
@@ -475,6 +482,27 @@ export default {
   height: 6px;
   background: rgba(255, 107, 107, 0.2);
   z-index: -1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-img {
+    height: 32px;  /* Smaller on mobile */
+  }
+  
+  .logo-text {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-img {
+    height: 28px;
+  }
+  
+  .logo-text {
+    display: none;  /* Hide text on very small screens, keep only logo */
+  }
 }
 
 /* Desktop Navigation */
@@ -501,7 +529,32 @@ export default {
   font-weight: 500;
 }
 
-.nav-link:hover {
+.nav-link:hover{
+  color: #FF6B6B;
+}
+
+.hov-un-ani {
+  display: inline-block;
+  position: relative;
+}
+.hov-un-ani::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #FF6B6B;
+  transform-origin: bottom right;
+  transition: transform 0.25s ease-out;
+}
+.hov-un-ani:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* .nav-link:hover {
   background: rgba(255, 107, 107, 0.1);
   color: var(--primary);
 }
@@ -513,7 +566,7 @@ export default {
 
 .nav-link .nav-icon {
   font-size: 1.1rem;
-}
+} */
 
 /* Header Actions */
 .header-actions {
@@ -684,7 +737,7 @@ export default {
 
 .dropdown-item:hover {
   background: rgba(255, 107, 107, 0.1);
-  color: var(--primary);
+  color: #FF6B6B;
 }
 
 .dropdown-item .item-icon {

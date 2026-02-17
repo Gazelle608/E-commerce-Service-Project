@@ -11,11 +11,11 @@
         </p>
         <div class="hero-actions">
           <router-link to="/spin" class="btn btn-primary btn-large">
-            <span class="btn-icon">🎲</span>
+            <!-- <span class="btn-icon">🎲</span> -->
             Spin the Globe
           </router-link>
           <router-link to="/register" class="btn btn-outline btn-large">
-            <span class="btn-icon">✈️</span>
+            <!-- <span class="btn-icon">✈️</span> -->
             Start Exploring
           </router-link>
         </div>
@@ -27,19 +27,26 @@
       <h2 class="section-title">How It <span>Works</span></h2>
       <div class="feature-grid">
         <div class="feature-card">
-          <div class="feature-icon">🌍</div>
+          <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-globe-europe-africa" viewBox="0 0 16 16">
+  <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M3.668 2.501l-.288.646a.847.847 0 0 0 1.479.815l.245-.368a.81.81 0 0 1 1.034-.275.81.81 0 0 0 .724 0l.261-.13a1 1 0 0 1 .775-.05l.984.34q.118.04.243.054c.784.093.855.377.694.801-.155.41-.616.617-1.035.487l-.01-.003C8.274 4.663 7.748 4.5 6 4.5 4.8 4.5 3.5 5.62 3.5 7c0 1.96.826 2.166 1.696 2.382.46.115.935.233 1.304.618.449.467.393 1.181.339 1.877C6.755 12.96 6.674 14 8.5 14c1.75 0 3-3.5 3-4.5 0-.262.208-.468.444-.7.396-.392.87-.86.556-1.8-.097-.291-.396-.568-.641-.756-.174-.133-.207-.396-.052-.551a.33.33 0 0 1 .42-.042l1.085.724c.11.072.255.058.348-.035.15-.15.415-.083.489.117.16.43.445 1.05.849 1.357L15 8A7 7 0 1 1 3.668 2.501"/>
+</svg></div>
           <h3>1. Spin the Globe</h3>
           <p>Tell us where you DON'T want to go. We handle the rest.</p>
           <div class="feature-badge">Step 1</div>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">💳</div>
+          <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
+  <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
+  <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+</svg></div>
           <h3>2. Pay & Wait</h3>
           <p>One price. Flight + accommodation included. No hidden fees.</p>
           <div class="feature-badge">Step 2</div>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">🎁</div>
+          <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-gift" viewBox="0 0 16 16">
+  <path d="M3 2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1 5 0v.006c0 .07 0 .27-.038.494H15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 14.5V7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2.038A3 3 0 0 1 3 2.506zm1.068.5H7v-.5a1.5 1.5 0 1 0-3 0c0 .085.002.274.045.43zM9 3h2.932l.023-.07c.043-.156.045-.345.045-.43a1.5 1.5 0 0 0-3 0zM1 4v2h6V4zm8 0v2h6V4zm5 3H9v8h4.5a.5.5 0 0 0 .5-.5zm-7 8V7H2v7.5a.5.5 0 0 0 .5.5z"/>
+</svg></div>
           <h3>3. Reveal</h3>
           <p>Destination revealed 48 hours before departure. Start packing!</p>
           <div class="feature-badge">Step 3</div>
@@ -164,8 +171,8 @@ export default {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-              url('/images/hero-bg.jpg');
+  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+              url('images/dawid-tkocz-7RaonO0Jn9E-unsplash.jpg');
   background-size: cover;
   background-position: center;
   color: white;
@@ -232,6 +239,12 @@ export default {
   margin-left: auto;
   margin-right: auto;
   animation: fadeInUp 1s ease-out 0.4s both;
+
+  /* Black outline using text stroke */
+  text-shadow: 1px 0 black, -0.1px 0 black, 0 0.1px black, 0 -0.1px black;
+  
+  /* Make text bold to compensate for stroke */
+  font-weight: 600;
 }
 
 .hero-actions {
@@ -362,7 +375,7 @@ export default {
 
 /* Stats Section */
 .stats {
-  background: linear-gradient(135deg, #4A6FA5 0%, #3A5A84 100%);
+  background: linear-gradient(135deg, #05142a 0%, #162841 100%);
   padding: 60px 20px;
   color: white;
 }
@@ -522,7 +535,9 @@ export default {
 
 /* CTA Section */
 .cta {
-  background: linear-gradient(135deg, #FF6B6B 0%, #9B6B9E 100%);
+  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),url('images/plane.jpg');
+  background-size: cover;
+  background-position: center;
   padding: 100px 20px;
   color: white;
   text-align: center;
@@ -557,7 +572,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 12px 30px;
-  border-radius: 50px;
+  border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s;
@@ -566,25 +581,27 @@ export default {
 }
 
 .btn-primary {
-  background: #FF6B6B;
-  color: white;
+  background: #fff;
+  color: #FF6B6B;
 }
 
 .btn-primary:hover {
   background: #FF5252;
+  color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
 }
 
 .btn-outline {
-  border: 2px solid #FF6B6B;
-  color: #FF6B6B;
+  border: 2px solid #fff;
+  color: #fff;
   background: transparent;
 }
 
 .btn-outline:hover {
   background: #FF6B6B;
   color: white;
+  border: 2px solid #FF6B6B;
   transform: translateY(-2px);
 }
 
@@ -595,8 +612,9 @@ export default {
 }
 
 .btn-outline-light:hover {
-  background: white;
-  color: #FF6B6B;
+  background: #FF6B6B;
+  color: #fff;
+  border: 2px solid #FF6B6B;
 }
 
 .btn-large {
