@@ -1,345 +1,418 @@
 <template>
-  <div class="login-form">
-    <h2 class="form-title">Welcome Back!</h2>
-    <p class="form-subtitle">Sign in to continue your adventure</p>
-
-    <!-- Social Login Buttons -->
-    <div class="social-login">
-      <button class="social-btn google" @click="socialLogin('google')">
-        <span class="social-icon">G</span>
-        <span>Continue with Google</span>
-      </button>
-      <button class="social-btn facebook" @click="socialLogin('facebook')">
-        <span class="social-icon">f</span>
-        <span>Continue with Facebook</span>
-      </button>
-    </div>
-
-    <div class="divider">
-      <span class="divider-text">or</span>
-    </div>
-
-    <!-- Error Message -->
-    <transition name="slide">
-      <div v-if="error" class="error-message">
-        <span class="error-icon">⚠️</span>
-        <span>{{ error }}</span>
-        <button @click="clearError" class="error-close">✕</button>
-      </div>
-    </transition>
-
-    <!-- Login Form -->
-    <form @submit.prevent="handleSubmit" class="form">
-      <!-- Email Field -->
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <div class="input-wrapper">
-          <span class="input-icon">📧</span>
-          <input 
-            type="email" 
-            id="email"
-            v-model="form.email" 
-            :class="{ 'error': errors.email }"
-            placeholder="your@email.com"
-            @blur="validateField('email')"
-            @input="clearFieldError('email')"
-          >
-        </div>
-        <transition name="fade">
-          <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-        </transition>
-      </div>
-
-      <!-- Password Field -->
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="input-wrapper">
-          <span class="input-icon">🔒</span>
-          <input 
-            :type="showPassword ? 'text' : 'password'" 
-            id="password"
-            v-model="form.password" 
-            :class="{ 'error': errors.password }"
-            placeholder="Enter your password"
-            @blur="validateField('password')"
-            @input="clearFieldError('password')"
-          >
-          <button 
-            type="button" 
-            class="password-toggle"
-            @click="togglePassword"
-            tabindex="-1"
-          >
-            {{ showPassword ? '👁️' : '👁️‍🗨️' }}
-          </button>
-        </div>
-        <transition name="fade">
-          <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-        </transition>
-      </div>
-
-      <!-- Remember Me & Forgot Password -->
-      <div class="form-options">
-        <label class="checkbox-container">
-          <input type="checkbox" v-model="form.remember">
-          <span class="checkmark"></span>
-          <span class="checkbox-text">Remember me</span>
-        </label>
-        <button type="button" class="forgot-link" @click="forgotPassword">
-          Forgot password?
+  <div class="auth-page">
+    <!-- Background blur effect -->
+    <div class="background-blur"></div>
+    
+    <!-- Main card -->
+    <div class="auth-card">
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button 
+          class="auth-tab" 
+          :class="{ active: isLoginTab }"
+          @click="isLoginTab = true"
+        >
+          <span class="tab-icon">✈️</span>
+          <span class="tab-label">Login</span>
+        </button>
+        <button 
+          class="auth-tab" 
+          :class="{ active: !isLoginTab }"
+          @click="isLoginTab = false"
+        >
+          <span class="tab-icon">🎫</span>
+          <span class="tab-label">Register</span>
         </button>
       </div>
 
-      <!-- Submit Button -->
-      <button 
-        type="submit" 
-        class="submit-btn" 
-        :disabled="loading || !isFormValid"
-      >
-        <span v-if="loading" class="spinner"></span>
-        <span v-else>Sign In</span>
-      </button>
-    </form>
+      <!-- Form Container -->
+      <div class="form-wrapper">
+        <!-- Header -->
+        <div class="form-header">
+          <h2>{{ isLoginTab ? 'Welcome back' : 'Join the journey' }}</h2>
+          <p class="header-subtitle">
+            {{ isLoginTab ? 'Sign in to your mystery adventures' : 'Create your account' }}
+          </p>
+        </div>
 
-    <!-- Register Link -->
-    <p class="register-text">
-      Don't have an account? 
-      <button class="register-link" @click="$emit('switch-to-register')">
-        Create one now
-      </button>
-    </p>
+        <!-- Login Form -->
+        <form v-if="isLoginTab" @submit.prevent="handleLogin" class="auth-form">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <div class="input-wrapper">
+              <span class="input-icon">📧</span>
+              <input 
+                id="login-email"
+                v-model="loginForm.email" 
+                type="email" 
+                placeholder="john@example.com" 
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input 
+                id="login-password"
+                v-model="loginForm.password" 
+                type="password" 
+                placeholder="••••••••" 
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="loginForm.rememberMe" />
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="submit-btn">🎲 Sign In <a href=""></a></button>
+
+          <p class="toggle-text">
+            Don't have an account?
+            <button type="button" @click="isLoginTab = false" class="toggle-link">
+              Create one
+            </button>
+          </p>
+        </form>
+
+        <!-- Register Form -->
+        <form v-else @submit.prevent="handleRegister" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-firstname">First Name</label>
+              <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input 
+                  id="reg-firstname"
+                  v-model="registerForm.firstName" 
+                  type="text" 
+                  placeholder="John" 
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-lastname">Last Name</label>
+              <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input 
+                  id="reg-lastname"
+                  v-model="registerForm.lastName" 
+                  type="text" 
+                  placeholder="Doe" 
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email">Email</label>
+            <div class="input-wrapper">
+              <span class="input-icon">📧</span>
+              <input 
+                id="reg-email"
+                v-model="registerForm.email" 
+                type="email" 
+                placeholder="john@example.com" 
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input 
+                id="reg-password"
+                v-model="registerForm.password" 
+                :type="showPassword ? 'text' : 'password'" 
+                placeholder="••••••••" 
+                required
+              />
+              <button 
+                type="button" 
+                class="password-toggle"
+                @click="showPassword = !showPassword"
+              >
+                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">✈️ Start Exploring</button>
+
+          <p class="toggle-text">
+            Already have an account?
+            <button type="button" @click="isLoginTab = true" class="toggle-link">
+              Sign in
+            </button>
+          </p>
+        </form>
+      </div>
+
+      <!-- Info Footer -->
+      <div class="card-footer">
+        <div class="info-item">
+          <span class="info-icon">🛫</span>
+          <span>Flights included</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🏨</span>
+          <span>Accommodation included</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🎁</span>
+          <span>Mystery destination</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive, computed } from 'vue'
-import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import store from '@/stores'
 
 export default {
   name: 'LoginForm',
-  emits: ['success', 'switch-to-register'],
-  setup(props, { emit }) {
-    const store = useStore()
-    
-    // State
-    const form = reactive({
-      email: '',
-      password: '',
-      remember: false
-    })
-    
-    const errors = ref({})
-    const loading = ref(false)
-    const error = ref('')
-    const showPassword = ref(false)
-
-    // Validation rules
-    const rules = {
-      email: (value) => {
-        if (!value) return 'Email is required'
-        if (!/^\S+@\S+\.\S+$/.test(value)) return 'Please enter a valid email'
-        return ''
-      },
-      password: (value) => {
-        if (!value) return 'Password is required'
-        if (value.length < 6) return 'Password must be at least 6 characters'
-        return ''
-      }
-    }
-
-    // Computed
-    const isFormValid = computed(() => {
-      return !rules.email(form.email) && !rules.password(form.password)
-    })
-
-    // Methods
-    const validateField = (field) => {
-      const error = rules[field](form[field])
-      if (error) {
-        errors.value[field] = error
-      } else {
-        delete errors.value[field]
-      }
-    }
-
-    const clearFieldError = (field) => {
-      delete errors.value[field]
-    }
-
-    const clearError = () => {
-      error.value = ''
-    }
-
-    const togglePassword = () => {
-      showPassword.value = !showPassword.value
-    }
-
-    const handleSubmit = async () => {
-      // Validate all fields
-      Object.keys(rules).forEach(field => {
-        validateField(field)
-      })
-
-      if (Object.keys(errors.value).length > 0) return
-
-      loading.value = true
-      error.value = ''
-
-      try {
-        const result = await store.dispatch('auth/login', {
-          email: form.email,
-          password: form.password,
-          remember: form.remember
-        })
-
-        if (result.success) {
-          emit('success', result.user)
-        } else {
-          error.value = result.error || 'Invalid email or password'
-        }
-      } catch (err) {
-        error.value = 'An error occurred. Please try again.'
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const socialLogin = (provider) => {
-      console.log(`Social login with ${provider}`)
-      // Implement social login
-    }
-
-    const forgotPassword = () => {
-      // Navigate to forgot password page or show modal
-      console.log('Forgot password clicked')
-    }
-
+  setup() {
     return {
-      form,
-      errors,
-      loading,
-      error,
-      showPassword,
-      isFormValid,
-      validateField,
-      clearFieldError,
-      clearError,
-      togglePassword,
-      handleSubmit,
-      socialLogin,
-      forgotPassword
+      router: useRouter()
+    }
+  },
+  data() {
+    return {
+      isLoginTab: true,
+      showPassword: false,
+      loginForm: {
+        email: '',
+        password: '',
+        rememberMe: false
+      },
+      registerForm: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: ''
+      }
+    }
+  },
+  methods: {
+    handleLogin() {
+      console.log('Login attempt:', this.loginForm)
+      
+      // Set user as authenticated in the store
+      store.commit('setAuthenticated', true)
+      store.commit('setUser', {
+        id: 1,
+        email: this.loginForm.email,
+        name: 'User',
+        rememberMe: this.loginForm.rememberMe
+      })
+      
+      // Clear form
+      this.loginForm = {
+        email: '',
+        password: '',
+        rememberMe: false
+      }
+      
+      // Redirect to home
+      this.$router.push({ name: 'home' })
+    },
+    handleRegister() {
+      console.log('Register attempt:', this.registerForm)
+      
+      // Set user as authenticated in the store
+      store.commit('setAuthenticated', true)
+      store.commit('setUser', {
+        id: Date.now(),
+        email: this.registerForm.email,
+        name: `${this.registerForm.firstName} ${this.registerForm.lastName}`
+      })
+      
+      // Clear form
+      this.registerForm = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: ''
+      }
+      
+      // Redirect to home
+      this.$router.push({ name: 'home' })
     }
   }
 }
 </script>
 
 <style scoped>
-.login-form {
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.auth-page {
+  min-height: 100vh;
   width: 100%;
-}
-
-.form-title {
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 8px;
-  text-align: center;
-}
-
-.form-subtitle {
-  color: #666;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-/* Social Login */
-.social-login {
+  background: url('/images/login.jpg') no-repeat center center;
+  background-size: cover;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
 }
 
-.social-btn {
+.background-blur {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  top: -100px;
+  right: -100px;
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-20px) translateX(10px); }
+}
+
+.auth-card {
+  background: rgba(21, 34, 56, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  color: rgba(245, 249, 255, 0.6);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  background: white;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-  width: 100%;
-}
-
-.social-btn.google:hover {
-  border-color: #DB4437;
-  color: #DB4437;
-}
-
-.social-btn.facebook:hover {
-  border-color: #4267B2;
-  color: #4267B2;
-}
-
-.social-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-/* Divider */
-.divider {
+  gap: 8px;
+  transition: all 0.3s ease;
   position: relative;
-  text-align: center;
-  margin: 24px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.divider::before,
-.divider::after {
+.auth-tab:hover {
+  color: rgba(245, 249, 255, 0.9);
+}
+
+.auth-tab.active {
+  color: #00D4FF;
+}
+
+.auth-tab.active::after {
   content: '';
   position: absolute;
-  top: 50%;
-  width: calc(50% - 30px);
-  height: 1px;
-  background: #e0e0e0;
-}
-
-.divider::before {
+  bottom: -1px;
   left: 0;
-}
-
-.divider::after {
   right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00D4FF, transparent);
 }
 
-.divider-text {
-  background: white;
-  padding: 0 15px;
-  color: #999;
-  font-size: 0.9rem;
-  text-transform: uppercase;
+.tab-icon {
+  font-size: 1.2rem;
 }
 
-/* Form */
-.form {
+/* Form Wrapper */
+.form-wrapper {
+  padding: 40px;
+}
+
+.form-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.form-header h2 {
+  font-size: 1.8rem;
+  color: #F5F9FF;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+  color: rgba(245, 249, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+/* Form Elements */
+.auth-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.form-group label {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
+label {
+  color: rgba(245, 249, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .input-wrapper {
@@ -351,28 +424,34 @@ export default {
 .input-icon {
   position: absolute;
   left: 12px;
-  color: #999;
   font-size: 1.1rem;
+  pointer-events: none;
 }
 
-.input-wrapper input {
+input {
   width: 100%;
-  padding: 14px 40px 14px 45px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s;
-  background: white;
+  padding: 12px 12px 12px 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 8px;
+  color: #F5F9FF;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
 }
 
-.input-wrapper input:focus {
-  border-color: #FF6B6B;
+input::placeholder {
+  color: rgba(245, 249, 255, 0.4);
+}
+
+input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #00D4FF;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
-.input-wrapper input.error {
-  border-color: #DC3545;
+input:hover:not(:focus) {
+  border-color: rgba(0, 212, 255, 0.4);
 }
 
 .password-toggle {
@@ -380,21 +459,14 @@ export default {
   right: 12px;
   background: none;
   border: none;
-  font-size: 1.2rem;
+  color: rgba(245, 249, 255, 0.6);
   cursor: pointer;
-  color: #999;
-  padding: 0;
-  transition: color 0.3s;
+  font-size: 1rem;
+  transition: color 0.2s;
 }
 
 .password-toggle:hover {
-  color: #FF6B6B;
-}
-
-.field-error {
-  color: #DC3545;
-  font-size: 0.8rem;
-  margin-top: 4px;
+  color: #00D4FF;
 }
 
 /* Form Options */
@@ -402,339 +474,160 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 5px;
+  margin-bottom: 10px;
 }
 
-.checkbox-container {
+.checkbox-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  position: relative;
-  padding-left: 25px;
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkmark {
-  position: absolute;
-  left: 0;
-  height: 18px;
-  width: 18px;
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
-.checkbox-container:hover input ~ .checkmark {
-  border-color: #FF6B6B;
-}
-
-.checkbox-container input:checked ~ .checkmark {
-  background: #FF6B6B;
-  border-color: #FF6B6B;
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-}
-
-.checkbox-container input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.checkbox-container .checkmark:after {
-  left: 5px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-text {
-  color: #666;
+  color: rgba(245, 249, 255, 0.7);
   font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #00D4FF;
 }
 
 .forgot-link {
-  background: none;
-  border: none;
-  color: #FF6B6B;
-  font-size: 0.9rem;
-  cursor: pointer;
+  color: rgba(0, 212, 255, 0.8);
   text-decoration: none;
-  transition: color 0.3s;
+  font-size: 0.9rem;
+  transition: color 0.2s;
 }
 
 .forgot-link:hover {
-  color: #FF5252;
+  color: #00D4FF;
   text-decoration: underline;
 }
 
 /* Submit Button */
 .submit-btn {
-  padding: 16px;
-  background: #FF6B6B;
-  color: white;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #00D4FF 0%, #00A8CC 100%);
+  color: #0B1E33;
   border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #FF5252;
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+
+.submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
 }
 
-.submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.submit-btn:hover::before {
+  left: 100%;
 }
 
-/* Register Text */
-.register-text {
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+/* Toggle Text */
+.toggle-text {
   text-align: center;
-  margin-top: 24px;
-  color: #666;
-  font-size: 0.95rem;
+  color: rgba(245, 249, 255, 0.6);
+  font-size: 0.9rem;
+  margin-top: 20px;
 }
 
-.register-link {
+.toggle-link {
   background: none;
   border: none;
-  color: #FF6B6B;
-  font-weight: 600;
+  color: #00D4FF;
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.3s;
+  font-weight: 600;
+  transition: color 0.2s;
+  margin-left: 5px;
 }
 
-.register-link:hover {
-  color: #FF5252;
+.toggle-link:hover {
+  color: #33E0FF;
   text-decoration: underline;
 }
 
-/* Error Message */
-.error-message {
-  background: #DC3545;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+/* Card Footer */
+.card-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(0, 212, 255, 0.1);
+  border-top: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.info-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  position: relative;
-  animation: slideDown 0.3s ease;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(21, 34, 56, 0.95);
+  color: rgba(245, 249, 255, 0.7);
+  font-size: 0.8rem;
+  text-align: center;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.info-icon {
+  font-size: 1.5rem;
 }
 
-.error-icon {
-  font-size: 1.2rem;
-}
-
-.error-close {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.8);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.3s;
-}
-
-.error-close:hover {
-  color: white;
-}
-
-/* Spinner */
-.spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* Dark Mode */
-:root.dark-mode .form-title {
-  color: #F5F9FF;
-}
-
-:root.dark-mode .form-subtitle {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .social-btn {
-  background: #0B1E33;
-  border-color: #1A334D;
-  color: #F5F9FF;
-}
-
-:root.dark-mode .social-btn:hover {
-  border-color: #00D4FF;
-  color: #00D4FF;
-}
-
-:root.dark-mode .divider::before,
-:root.dark-mode .divider::after {
-  background: #1A334D;
-}
-
-:root.dark-mode .divider-text {
-  background: #0B1E33;
-  color: #B0C4DE;
-}
-
-:root.dark-mode .form-group label {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .input-wrapper input {
-  background: #122B44;
-  border-color: #1A334D;
-  color: #F5F9FF;
-}
-
-:root.dark-mode .input-wrapper input:focus {
-  border-color: #00D4FF;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
-}
-
-:root.dark-mode .input-wrapper input::placeholder {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .password-toggle {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .password-toggle:hover {
-  color: #00D4FF;
-}
-
-:root.dark-mode .checkbox-text {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .checkmark {
-  background: #122B44;
-  border-color: #1A334D;
-}
-
-:root.dark-mode .checkbox-container:hover input ~ .checkmark {
-  border-color: #00D4FF;
-}
-
-:root.dark-mode .checkbox-container input:checked ~ .checkmark {
-  background: #00D4FF;
-  border-color: #00D4FF;
-}
-
-:root.dark-mode .forgot-link {
-  color: #00D4FF;
-}
-
-:root.dark-mode .forgot-link:hover {
-  color: #80EAFF;
-}
-
-:root.dark-mode .submit-btn {
-  background: #00D4FF;
-  color: #0B1E33;
-}
-
-:root.dark-mode .submit-btn:hover:not(:disabled) {
-  background: #80EAFF;
-}
-
-:root.dark-mode .register-text {
-  color: #B0C4DE;
-}
-
-:root.dark-mode .register-link {
-  color: #00D4FF;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 480px) {
-  .form-title {
+  .auth-card {
+    max-width: 100%;
+  }
+
+  .form-wrapper {
+    padding: 30px 20px;
+  }
+
+  .form-header h2 {
     font-size: 1.5rem;
   }
-  
-  .social-btn {
-    font-size: 0.95rem;
+
+  .form-row {
+    grid-template-columns: 1fr;
   }
-  
-  .input-wrapper input {
-    padding: 12px 40px 12px 45px;
+
+  .card-footer {
+    grid-template-columns: 1fr;
   }
-  
-  .form-options {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .submit-btn {
-    padding: 14px;
+
+  .auth-tab {
+    font-size: 0.85rem;
   }
 }
 </style>

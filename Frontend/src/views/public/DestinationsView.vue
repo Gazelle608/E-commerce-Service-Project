@@ -227,7 +227,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import DestinationCard from '@/components/ui/DestinationCard.vue'
+import DestinationCard from '@/components/common/ui/DestinationCard.vue'
 
 export default {
   name: 'DestinationsView',
