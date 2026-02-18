@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import LoginForm from '@/components/forms/LoginForm.vue'
+import LoginForm from '@/components/auth/LoginForm.vue'
 
 export default {
   name: 'LoginView',

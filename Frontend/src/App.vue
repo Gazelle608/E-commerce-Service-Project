@@ -1,90 +1,136 @@
 <template>
-  <div id="app" :class="{ 'dark-mode': isDarkMode }">
-    <!-- Loading Overlay -->
-    <div v-if="isAppLoading" class="app-loading">
-      <div class="loading-spinner"></div>
-      <p>Loading So Where To?...</p>
-    </div>
+  <div id="app" :class="{ 'dark-mode': isDarkMode, 'mobile-menu-open': isMobileMenuOpen }">
+    <!-- Loading Overlay (for initial app load) -->
+    <template v-if="isAppLoading">
+      <div class="app-loading">
+        <LoadingSpinner 
+          :fullscreen="true" 
+          message="So Where To?" 
+          submessage="Preparing your adventure..."
+        />
+      </div>
+    </template>
 
-    <!-- Main App -->
-    <div v-else class="app-container">
-      <!-- Header -->
-      <AppHeader />
+    <!-- Main App Content -->
+    <template v-else>
+      <div class="app-container">
+        <!-- Header -->
+        <AppHeader />
 
-      <!-- Main Content with Transitions -->
-      <main class="main-content">
-        <router-view v-slot="{ Component, route }">
-          <transition 
-            :name="route.meta.transition || 'fade'" 
-            mode="out-in"
-            @before-enter="beforeEnter"
-            @after-enter="afterEnter"
+        <!-- Main Content with Transitions -->
+        <main class="main-content">
+          <router-view v-slot="{ Component, route }">
+            <transition 
+              :name="route.meta.transition || 'fade'" 
+              mode="out-in"
+              @before-enter="beforeRouteEnter"
+              @after-enter="afterRouteEnter"
+            >
+              <keep-alive :include="cachedViews">
+                <component :is="Component" :key="route.path" />
+              </keep-alive>
+            </transition>
+          </router-view>
+        </main>
+
+        <!-- Footer -->
+        <AppFooter />
+
+        <!-- Back to Top Button -->
+        <transition name="fade">
+          <button 
+            v-show="showBackToTop" 
+            class="back-to-top"
+            @click="scrollToTop"
+            aria-label="Back to top"
           >
-            <keep-alive :include="cachedViews">
-              <component :is="Component" :key="route.path" />
-            </keep-alive>
-          </transition>
-        </router-view>
-      </main>
+            ↑
+          </button>
+        </transition>
 
-      <!-- Footer -->
-      <AppFooter />
+        <!-- Global Notification -->
+        <transition name="slide">
+          <div v-if="notification.show" class="notification" :class="notification.type">
+            <span class="notification-icon">{{ notificationIcon }}</span>
+            <span class="notification-message">{{ notification.message }}</span>
+            <button class="notification-close" @click="closeNotification">✕</button>
+          </div>
+        </transition>
 
-      <!-- Back to Top Button -->
-      <button 
-        v-show="showBackToTop" 
-        class="back-to-top"
-        @click="scrollToTop"
-        aria-label="Back to top"
-      >
-        ↑
-      </button>
+        <!-- Auth Modal -->
+        <AuthModal 
+          :show="showAuthModal"
+          :initial-tab="authModalTab"
+          :return-url="authReturnUrl"
+          @close="closeAuthModal"
+          @success="handleAuthSuccess"
+          @guest="handleGuest"
+        />
 
-      <!-- Global Notification -->
-      <div v-if="notification.show" class="notification" :class="notification.type">
-        <span class="notification-icon">{{ notificationIcon }}</span>
-        <span class="notification-message">{{ notification.message }}</span>
-        <button class="notification-close" @click="closeNotification">✕</button>
+        <!-- Cookie Consent Banner -->
+        <transition name="slide-up">
+          <div v-if="showCookieConsent" class="cookie-consent">
+            <div class="cookie-content">
+              <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
+              <div class="cookie-actions">
+                <button @click="acceptCookies" class="btn btn-primary btn-small">Accept</button>
+                <button @click="declineCookies" class="btn btn-outline btn-small">Decline</button>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- Network Status Indicator -->
+        <transition name="fade">
+          <div v-if="!isOnline" class="offline-indicator">
+            <span class="offline-icon">📡</span>
+            <span>You are offline. Some features may be unavailable.</span>
+          </div>
+        </transition>
       </div>
-
-      <!-- Cookie Consent Banner -->
-      <div v-if="showCookieConsent" class="cookie-consent">
-        <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
-        <div class="cookie-actions">
-          <button @click="acceptCookies" class="btn btn-primary btn-small">Accept</button>
-          <button @click="declineCookies" class="btn btn-outline btn-small">Decline</button>
-        </div>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useStore } from 'vuex'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
+import { useRoute, useRouter } from 'vue-router'
+
+// UPDATED PATHS - match your folder structure
+import AppHeader from '@/components/common/layout/AppHeader.vue'
+import AppFooter from '@/components/common/layout/AppFooter.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
 
 export default {
   name: 'App',
   components: {
     AppHeader,
-    AppFooter
+    AppFooter,
+    LoadingSpinner,
+    AuthModal
   },
   setup() {
+    // ... rest of your setup code (keep as is)
     const store = useStore()
     const route = useRoute()
+    const router = useRouter()
     
     // State
     const isAppLoading = ref(true)
     const showBackToTop = ref(false)
-    const showCookieConsent = ref(!localStorage.getItem('cookiesAccepted'))
-    const cachedViews = ref(['HomeView', 'SpinView']) // Views to keep alive
+    const isOnline = ref(navigator.onLine)
+    const cachedViews = ref(['HomeView', 'DestinationsView'])
+    const isMobileMenuOpen = ref(false)
     
+    // Auth Modal state
+    const showAuthModal = ref(false)
+    const authModalTab = ref('login')
+    const authReturnUrl = ref(null)
+
     // Computed
-    const isDarkMode = computed(() => store.state.isDarkMode || false)
-    
+    const isDarkMode = computed(() => store.state.isDarkMode)
     const notification = computed(() => store.state.notification || {
       show: false,
       message: '',
@@ -101,17 +147,21 @@ export default {
       return icons[notification.value.type] || 'ℹ️'
     })
 
+    const showCookieConsent = computed(() => {
+      return !localStorage.getItem('cookiesAccepted')
+    })
+
     // Methods
-    const beforeEnter = (el) => {
+    const beforeRouteEnter = (el) => {
       // Optional: Add pre-enter animations
     }
 
-    const afterEnter = (el) => {
-      // Scroll to top on route change
+    const afterRouteEnter = (el) => {
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       })
+      store.commit('CLOSE_MOBILE_MENU')
     }
 
     const handleScroll = () => {
@@ -129,77 +179,125 @@ export default {
       store.commit('HIDE_NOTIFICATION')
     }
 
+    const openAuthModal = (tab = 'login', returnUrl = null) => {
+      authModalTab.value = tab
+      authReturnUrl.value = returnUrl
+      showAuthModal.value = true
+    }
+
+    const closeAuthModal = () => {
+      showAuthModal.value = false
+      authReturnUrl.value = null
+    }
+
+    const handleAuthSuccess = (user) => {
+      console.log('Auth successful:', user)
+    }
+
+    const handleGuest = () => {
+      console.log('Continuing as guest')
+    }
+
     const acceptCookies = () => {
       localStorage.setItem('cookiesAccepted', 'true')
-      showCookieConsent.value = false
+      store.commit('SHOW_NOTIFICATION', {
+        message: 'Thank you for accepting cookies!',
+        type: 'success'
+      })
     }
 
     const declineCookies = () => {
       localStorage.setItem('cookiesAccepted', 'false')
-      showCookieConsent.value = false
     }
 
-    const checkAuth = async () => {
-      // Check if user is authenticated on app load
-      const token = localStorage.getItem('token')
-      if (token && !store.getters.isAuthenticated) {
-        try {
-          await store.dispatch('validateToken')
-        } catch (error) {
-          console.error('Auth validation failed:', error)
-        }
-      }
+    const updateOnlineStatus = () => {
+      isOnline.value = navigator.onLine
+      store.commit('SHOW_NOTIFICATION', {
+        message: isOnline.value ? 'You are back online!' : 'You are offline',
+        type: isOnline.value ? 'success' : 'warning'
+      })
     }
 
-    const loadInitialData = async () => {
+    const initializeApp = async () => {
       try {
-        // Load initial data
-        await Promise.all([
-          store.dispatch('fetchDestinations'),
-          store.dispatch('fetchFeaturedBundles')
-        ])
+        await store.dispatch('init')
+        
+        if (store.state.isDarkMode) {
+          document.documentElement.classList.add('dark-mode')
+        }
+
+        const { query } = route
+        if (query.redirect) {
+          openAuthModal('login', query.redirect)
+        }
+
+        if (query.session === 'expired') {
+          store.commit('SHOW_NOTIFICATION', {
+            message: 'Your session has expired. Please log in again.',
+            type: 'warning'
+          })
+          openAuthModal('login')
+        }
+
       } catch (error) {
-        console.error('Failed to load initial data:', error)
+        console.error('Failed to initialize app:', error)
+        store.commit('SHOW_NOTIFICATION', {
+          message: 'Failed to initialize app. Please refresh the page.',
+          type: 'error'
+        })
       } finally {
-        // Hide loading after minimum 1 second for smooth UX
         setTimeout(() => {
           isAppLoading.value = false
         }, 1000)
       }
     }
 
-    // Lifecycle
+    watch(() => store.getters['auth/isAuthenticated'], (isAuthenticated) => {
+      if (isAuthenticated && showAuthModal.value) {
+        closeAuthModal()
+      }
+    })
+
+    watch(() => route.query, (query) => {
+      if (query.redirect) {
+        openAuthModal('login', query.redirect)
+      }
+    })
+
     onMounted(() => {
       window.addEventListener('scroll', handleScroll)
-      checkAuth()
-      loadInitialData()
+      window.addEventListener('online', updateOnlineStatus)
+      window.addEventListener('offline', updateOnlineStatus)
+      initializeApp()
     })
 
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('online', updateOnlineStatus)
+      window.removeEventListener('offline', updateOnlineStatus)
     })
-
-    // Watch for route changes
-    watch(
-      () => route.path,
-      () => {
-        // Close mobile menu if open
-        store.commit('CLOSE_MOBILE_MENU')
-      }
-    )
 
     return {
       isAppLoading,
       showBackToTop,
       showCookieConsent,
+      isOnline,
       cachedViews,
       isDarkMode,
+      isMobileMenuOpen,
       notification,
       notificationIcon,
-      beforeEnter,
-      afterEnter,
+      showAuthModal,
+      authModalTab,
+      authReturnUrl,
+      beforeRouteEnter,
+      afterRouteEnter,
       scrollToTop,
       closeNotification,
+      openAuthModal,
+      closeAuthModal,
+      handleAuthSuccess,
+      handleGuest,
       acceptCookies,
       declineCookies
     }
@@ -239,10 +337,13 @@ export default {
   --radius-full: 9999px;
   
   /* Dark mode variables */
-  --dark-bg: #1a1a1a;
-  --dark-surface: #2d2d2d;
-  --dark-text: #ffffff;
-  --dark-text-secondary: #b0b0b0;
+  --dark-bg: #0B1E33;
+  --dark-surface: #122B44;
+  --dark-surface-light: #1A334D;
+  --dark-text: #F5F9FF;
+  --dark-text-secondary: #B0C4DE;
+  --dark-accent: #00D4FF;
+  --dark-border: #1A334D;
 }
 
 /* Global Reset */
@@ -257,20 +358,21 @@ html {
 }
 
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--white);
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Dark Mode */
-#app.dark-mode {
+.dark-mode {
   background-color: var(--dark-bg);
   color: var(--dark-text);
 }
 
-#app.dark-mode .main-content {
+.dark-mode .main-content {
   background-color: var(--dark-bg);
 }
 
@@ -289,6 +391,10 @@ body {
   transition: background-color 0.3s ease;
 }
 
+.dark-mode .main-content {
+  background-color: var(--dark-bg);
+}
+
 /* Loading Screen */
 .app-loading {
   position: fixed;
@@ -297,37 +403,11 @@ body {
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   z-index: 9999;
 }
 
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-.app-loading p {
-  color: white;
-  font-size: 1.2rem;
-  font-weight: 500;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+.dark-mode .app-loading {
+  background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
 }
 
 /* Page Transitions */
@@ -354,6 +434,16 @@ body {
 .slide-leave-to {
   transform: translateX(-30px);
   opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
 }
 
 /* Back to Top Button */
@@ -387,6 +477,15 @@ body {
   background: var(--primary-dark);
   transform: translateY(-5px);
   box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+}
+
+.dark-mode .back-to-top {
+  background: var(--dark-accent);
+  color: var(--dark-bg);
+}
+
+.dark-mode .back-to-top:hover {
+  background: #80EAFF;
 }
 
 /* Notification */
@@ -458,6 +557,15 @@ body {
   }
 }
 
+.dark-mode .notification {
+  background: var(--dark-surface);
+  border-color: var(--dark-border);
+}
+
+.dark-mode .notification-message {
+  color: var(--dark-text);
+}
+
 /* Cookie Consent */
 .cookie-consent {
   position: fixed;
@@ -467,13 +575,8 @@ body {
   background: var(--text-dark);
   color: white;
   padding: 15px 30px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
   z-index: 98;
   animation: slideUp 0.5s ease-out;
-  flex-wrap: wrap;
 }
 
 @keyframes slideUp {
@@ -485,7 +588,17 @@ body {
   }
 }
 
-.cookie-consent p {
+.cookie-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cookie-content p {
   font-size: 0.95rem;
   opacity: 0.9;
   margin: 0;
@@ -494,6 +607,7 @@ body {
 .cookie-actions {
   display: flex;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .cookie-actions .btn {
@@ -506,44 +620,37 @@ body {
   font-size: 0.85rem;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .notification {
-    top: 10px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-  }
-  
-  .back-to-top {
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-  
-  .cookie-consent {
-    flex-direction: column;
-    text-align: center;
-    padding: 15px;
-  }
-  
-  .cookie-actions {
-    width: 100%;
-    justify-content: center;
-  }
+.dark-mode .cookie-consent {
+  background: var(--dark-surface);
+  border-top: 1px solid var(--dark-accent);
 }
 
-@media (max-width: 480px) {
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .app-loading p {
-    font-size: 1rem;
-  }
+/* Offline Indicator */
+.offline-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: var(--warning);
+  color: var(--text-dark);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 98;
+  animation: fadeIn 0.3s ease;
+}
+
+.offline-icon {
+  font-size: 1.2rem;
+}
+
+.dark-mode .offline-indicator {
+  background: var(--warning);
+  color: var(--dark-bg);
 }
 
 /* Utility Classes */
@@ -565,10 +672,19 @@ body {
   outline-offset: 2px;
 }
 
+.dark-mode :focus-visible {
+  outline-color: var(--dark-accent);
+}
+
 /* Selection Style */
 ::selection {
   background: var(--primary);
   color: white;
+}
+
+.dark-mode ::selection {
+  background: var(--dark-accent);
+  color: var(--dark-bg);
 }
 
 /* Scrollbar Styling */
@@ -587,5 +703,65 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-dark);
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--dark-surface);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--dark-accent);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #80EAFF;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .back-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .cookie-content {
+    flex-direction: column;
+    text-align: center;
+    padding: 10px;
+  }
+  
+  .cookie-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .offline-indicator {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .app-loading p {
+    font-size: 1rem;
+  }
 }
 </style>

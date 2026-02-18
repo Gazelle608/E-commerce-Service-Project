@@ -266,7 +266,8 @@ export default {
 .auth-page {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #0B1E33 0%, #152238 100%);
+  background: url('/images/login.jpg') no-repeat center center;
+  background-size: cover;
   display: flex;
   justify-content: center;
   align-items: center;

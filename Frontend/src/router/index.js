@@ -1,153 +1,125 @@
+// router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import store from '../stores'
+import { routes } from './routes'
+import store from '@/stores'
 
-// Import Views
-import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import SpinView from '../views/SpinView.vue'
-import RevealView from '../views/RevealView.vue'
-import CartView from '../views/CartView.vue'
-import CheckoutView from '../views/CheckoutView.vue'
-import ProfileView from '../views/ProfileView.vue'
-
-const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView,
-    meta: {
-      title: 'So Where To? - Mystery Travel Adventures',
-      description: 'Book mystery travel bundles worldwide. Flights + accommodation included. Destination revealed after purchase.'
-    }
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginView,
-    meta: {
-      title: 'Login - So Where To?',
-      description: 'Sign in to your account',
-      guestOnly: true  // Only accessible when not logged in
-    }
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: RegisterView,
-    meta: {
-      title: 'Register - So Where To?',
-      description: 'Create your account',
-      guestOnly: true  // Only accessible when not logged in
-    }
-  },
-  {
-    path: '/spin',
-    name: 'spin',
-    component: SpinView,
-    meta: {
-      title: 'Spin the Globe - So Where To?',
-      description: 'Find your mystery adventure',
-      requiresAuth: true  // Requires authentication
-    }
-  },
-  {
-    path: '/reveal',
-    name: 'reveal',
-    component: RevealView,
-    meta: {
-      title: 'Destination Revealed - So Where To?',
-      description: 'Your mystery destination',
-      requiresAuth: true  // Requires authentication
-    }
-  },
-  {
-    path: '/cart',
-    name: 'cart',
-    component: CartView,
-    meta: {
-      title: 'Your Cart - So Where To?',
-      description: 'View your mystery bookings',
-      requiresAuth: true  // Requires authentication
-    }
-  },
-  {
-    path: '/checkout',
-    name: 'checkout',
-    component: CheckoutView,
-    meta: {
-      title: 'Checkout - So Where To?',
-      description: 'Complete your booking',
-      requiresAuth: true  // Requires authentication
-    }
-  },
-  {
-    path: '/profile',
-    name: 'profile',
-    component: ProfileView,
-    meta: {
-      title: 'My Profile - So Where To?',
-      description: 'Manage your account',
-      requiresAuth: true  // Requires authentication
-    }
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: HomeView, // Fallback to home for now
-    meta: {
-      title: 'Page Not Found - So Where To?'
-    }
-  }
-]
-
+// Create router instance
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // Scroll to top on route change
+    // If saved position exists (browser back/forward), use it
     if (savedPosition) {
       return savedPosition
-    } else {
-      return { top: 0 }
     }
+    
+    // If route has hash, scroll to element
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    }
+    
+    // Scroll to top on new route
+    return { top: 0, behavior: 'smooth' }
   }
 })
 
-// Navigation Guard - Authentication
+// ===== NAVIGATION GUARDS =====
+
+// Global Before Guard
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = store.getters.isAuthenticated
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const guestOnly = to.matched.some(record => record.meta.guestOnly)
-  
-  // Update page title
+  // Set page title
   if (to.meta.title) {
     document.title = to.meta.title
   }
   
-  // Redirect unauthenticated users away from protected routes
-  if (requiresAuth && !isAuthenticated) {
-    next({
-      name: 'login',
-      query: { redirect: to.fullPath }
+  // Set meta description
+  if (to.meta.description) {
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute('content', to.meta.description)
+    }
+  }
+  
+  // Check authentication status
+  const isAuthenticated = store.getters['auth/isAuthenticated']
+  
+  // Log navigation in development
+  if (import.meta.env.DEV) {
+    console.log('📍 Navigation:', {
+      from: from.fullPath,
+      to: to.fullPath,
+      authenticated: isAuthenticated,
+      meta: to.meta
     })
-    return
   }
   
-  // Redirect authenticated users away from guest-only routes
-  if (guestOnly && isAuthenticated) {
-    next({ name: 'home' })
-    return
+  // Check if route requires authentication
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!isAuthenticated) {
+      // Store the intended destination
+      sessionStorage.setItem('redirectUrl', to.fullPath)
+      
+      // Show notification
+      store.commit('SHOW_NOTIFICATION', {
+        message: 'Please log in to access this page',
+        type: 'info'
+      })
+      
+      // Redirect to login with return URL
+      next({
+        name: 'login',
+        query: { redirect: to.fullPath }
+      })
+      return
+    }
   }
   
-  // Allow navigation for all other cases
+  // Check if route is for guests only (login/register)
+  if (to.matched.some(record => record.meta.guestOnly)) {
+    if (isAuthenticated) {
+      // Redirect to home if already logged in
+      next({ name: 'home' })
+      return
+    }
+  }
+  
+  // Check for session expiry
+  if (to.query.session === 'expired') {
+    store.commit('SHOW_NOTIFICATION', {
+      message: 'Your session has expired. Please log in again.',
+      type: 'warning'
+    })
+  }
+  
+  // Proceed to route
   next()
 })
 
-// After each route - Analytics or other post-navigation tasks
+// Global After Guard
 router.afterEach((to, from) => {
-  // You could log page views to analytics here
-  console.log(`Navigated to: ${to.name}`)
+  // Close mobile menu if open
+  store.commit('CLOSE_MOBILE_MENU')
+})
+
+// ROUTER ERRORS
+router.onError((error) => {
+  console.error('Router error:', error)
+  
+  // Handle chunk loading errors (network issues)
+  if (error.message.includes('Failed to fetch dynamically imported module')) {
+    store.commit('SHOW_NOTIFICATION', {
+      message: 'Network error. Please check your connection.',
+      type: 'error'
+    })
+    
+    // Reload page after 3 seconds
+    setTimeout(() => {
+      window.location.reload()
+    }, 3000)
+  }
 })
 
 export default router
